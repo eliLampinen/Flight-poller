@@ -19,7 +19,8 @@ from configFile import (
     price_threshold,
     destination,
     duration,
-    airport
+    airport,
+    env
 )
 
 import csv
@@ -228,8 +229,8 @@ def log_flight_price(flight_date, flight_time, destination, price):
         })
 
 def main():
-    # Sleep for a random duration between 1 and 3 seconds
-    time.sleep(random.uniform(123, 1231))
+    if env != "dev":
+        time.sleep(random.uniform(123, 1231))
 
     # Check if there are any future dates to track
     if not has_future_dates():
