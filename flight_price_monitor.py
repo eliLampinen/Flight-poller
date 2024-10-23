@@ -28,8 +28,14 @@ from datetime import datetime
 # Constants
 URL_TEMPLATE = "https://www.tui.fi/lms/all?start=0&airport={airport}&date=&destination={destination}&resort=&duration={duration}&location=&selection=flightonly&pagesize=100&sorting=date"
 DATA_FILE = 'previous_flights.json'
-ERROR_LOG_FILE = 'error_log.json'
+API_ERROR_LOG_FILE = 'api_error_log.json'
+GENERAL_ERROR_LOG_FILE = 'error_log.txt'
 CSV_FILE = 'flight_prices_log.csv'
+
+
+def log_error_to_file(error_message):
+    with open(GENERAL_ERROR_LOG_FILE, 'a') as error_log_file:
+        error_log_file.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {error_message}\n")
 
 def has_future_dates():
     today = datetime.now().date()
@@ -73,8 +79,8 @@ def handle_api_error(error_message):
     error_logged_today = False
     today_str = datetime.now().strftime('%Y-%m-%d')
 
-    if os.path.exists(ERROR_LOG_FILE):
-        with open(ERROR_LOG_FILE, 'r') as f:
+    if os.path.exists(API_ERROR_LOG_FILE):
+        with open(API_ERROR_LOG_FILE, 'r') as f:
             error_log = json.load(f)
             last_error_date = error_log.get('last_error_date')
             if last_error_date == today_str:
@@ -87,7 +93,7 @@ def handle_api_error(error_message):
         send_error_email(error_message)
         # Update error log
         error_log['last_error_date'] = today_str
-        with open(ERROR_LOG_FILE, 'w') as f:
+        with open(API_ERROR_LOG_FILE, 'w') as f:
             json.dump(error_log, f)
 
 def send_error_email(error_message):
@@ -286,4 +292,8 @@ def main():
     save_current_flights(current_flights)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        error_message = f"Unexpected error in main(): {str(e)}"
+        log_error_to_file(error_message)
