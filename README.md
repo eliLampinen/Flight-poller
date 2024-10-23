@@ -76,9 +76,9 @@ dates_to_track = [
 ]  # Dates and times to track (format must match the website's format)
 
 price_threshold = 500  # Maximum price in euros you're willing to pay
-destination = 'LPA'     # Destination airport code (default: LPA for Gran Canaria)
+destination = 'TFS'     # Destination airport code
 duration = 7            # Trip duration in days (default: 7)
-airport = 'OUL'         # Departure airport code (default: OUL)
+airport = 'HEL'         # Departure airport code
 ```
 
 ### Configuration Parameters
@@ -91,9 +91,9 @@ airport = 'OUL'         # Departure airport code (default: OUL)
 - **Flight Tracking Settings**
   - `dates_to_track`: A list of date strings in the format `"dd-mm-yyyy · hh:mm"` that you want to monitor.
   - `price_threshold`: The maximum price you're willing to pay for the flights.
-  - `destination`: The destination airport code (e.g., `'LPA'` for Gran Canaria).
+  - `destination`: The destination airport code
   - `duration`: The trip duration in days.
-  - `airport`: The departure airport code (e.g., `'OUL'`).
+  - `airport`: The departure airport code (e.g., `'HEL'`).
 
 ### Important Notes
 
