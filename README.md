@@ -20,7 +20,6 @@ It helps you keep track of flight prices and availability for specific dates and
 - [Data Files](#data-files)
 - [Troubleshooting](#troubleshooting)
 - [Ethical Considerations](#ethical-considerations)
-- [License](#license)
 
 ## Features
 
@@ -184,10 +183,5 @@ To automate the script to run at regular intervals (e.g., every hour), set up a 
 - **Data Usage**: Use the data responsibly and for personal purposes.
 - **Request Frequency**: Avoid setting the script to run too frequently to prevent overloading the server.
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
 
 **Disclaimer**: This script is intended for personal use to monitor flight prices. The developer is not responsible for any misuse of the script or issues arising from changes to the TUI website structure or policies.
