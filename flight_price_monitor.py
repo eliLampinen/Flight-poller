@@ -195,7 +195,7 @@ def send_email(alerts):
 
 def main():
     # Sleep for a random duration between 1 and 3 seconds
-    time.sleep(random.uniform(1, 3))
+    time.sleep(random.uniform(123, 1231))
 
     # Check if there are any future dates to track
     if not has_future_dates():
