@@ -22,10 +22,14 @@ from configFile import (
     airport
 )
 
+import csv
+from datetime import datetime
+
 # Constants
 URL_TEMPLATE = "https://www.tui.fi/lms/all?start=0&airport={airport}&date=&destination={destination}&resort=&duration={duration}&location=&selection=flightonly&pagesize=100&sorting=date"
 DATA_FILE = 'previous_flights.json'
 ERROR_LOG_FILE = 'error_log.json'
+CSV_FILE = 'flight_prices_log.csv'
 
 def has_future_dates():
     today = datetime.now().date()
@@ -193,6 +197,30 @@ def send_email(alerts):
     except Exception as e:
         print(f"Failed to send email: {e}")
 
+# Function to log flight prices into a CSV file
+def log_flight_price(flight_date, flight_time, destination, price):
+    current_time = datetime.now()
+    log_date = current_time.strftime("%Y-%m-%d")
+    log_time = current_time.strftime("%H:%M:%S")
+
+    with open(CSV_FILE, 'a', newline='', encoding='utf-8') as csvfile:
+        fieldnames = ['log_date', 'log_time', 'flight_date', 'flight_time', 'destination', 'price']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        # Write the header only if the file is empty (first time logging)
+        if csvfile.tell() == 0:
+            writer.writeheader()
+
+        # Log the current price with a timestamp
+        writer.writerow({
+            'log_date': log_date,
+            'log_time': log_time,
+            'flight_date': flight_date,
+            'flight_time': flight_time,
+            'destination': destination,
+            'price': price
+        })
+
 def main():
     # Sleep for a random duration between 1 and 3 seconds
     time.sleep(random.uniform(123, 1231))
@@ -215,9 +243,13 @@ def main():
 
     for flight in flights:
         date_info = flight['date_info']
+        flight_date, flight_time = date_info.split(' · ')
         price = flight['price']
         hurry_text = flight['hurry_text']
         flight_key = date_info  # Use date_info as a unique key
+    
+        destination_info = flight['destination_info']
+        log_flight_price(flight_date, flight_time, destination_info, price)
 
         # Initialize current flight data
         current_flights[flight_key] = {
