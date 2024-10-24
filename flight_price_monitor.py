@@ -55,13 +55,9 @@ def has_future_dates():
 
 def fetch_flight_data():
     headers = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Encoding': 'gzip, deflate, br, zstd',
-        'Accept-Language': 'fi-FI,fi;q=0.9',
-        'Cache-Control': 'max-age=0',
-        'Connection': 'keep-alive',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Upgrade-Insecure-Requests': '1',
+        'Host': 'www.tui.fi',
+        'User-Agent': 'curl/8.5.0',
+        'Accept': '*/*',
     }
 
     url = URL_TEMPLATE.format(airport=airport, destination=destination, duration=duration)
