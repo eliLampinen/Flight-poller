@@ -70,7 +70,7 @@ def fetch_flight_data():
     try:
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
-            print(f"Error fetching data, status code: {response.status_code}")
+            print(f"Error: Failed to fetch data. Status code: {response.status_code}, Response text: {response.text}")
             handle_api_error(response.status_code)
             return None
         response.raise_for_status()
