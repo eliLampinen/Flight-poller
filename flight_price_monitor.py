@@ -1,5 +1,3 @@
-# flight_price_monitor.py
-
 import requests
 from bs4 import BeautifulSoup
 import smtplib
@@ -37,19 +35,22 @@ CSV_FILE = 'flight_prices_log.csv'
 def log_error_to_file(error_message):
     with open(GENERAL_ERROR_LOG_FILE, 'a') as error_log_file:
         error_log_file.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {error_message}\n")
+    print(f"Error logged: {error_message}")
 
 def has_future_dates():
     today = datetime.now().date()
+    print("Checking future dates...")
     for date_str in dates_to_track:
-        # Extract the date part before '·'
         date_part = date_str.split('·')[0].strip()
         try:
             flight_date = datetime.strptime(date_part, '%d-%m-%Y').date()
             if flight_date >= today:
+                print(f"Future date found: {flight_date}")
                 return True
         except ValueError:
-            # Handle incorrect date format
+            print(f"Invalid date format: {date_part}")
             continue
+    print("No future dates to track.")
     return False
 
 def fetch_flight_data():
@@ -64,19 +65,23 @@ def fetch_flight_data():
     }
 
     url = URL_TEMPLATE.format(airport=airport, destination=destination, duration=duration)
+    print(f"Fetching flight data from URL: {url}")
+    
     try:
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
+            print(f"Error fetching data, status code: {response.status_code}")
             handle_api_error(response.status_code)
             return None
         response.raise_for_status()
+        print("Flight data fetched successfully.")
         return response.text
     except requests.RequestException as e:
+        print(f"RequestException occurred: {str(e)}")
         handle_api_error(str(e))
         return None
 
 def handle_api_error(error_message):
-    # Check if an error email was sent today
     error_logged_today = False
     today_str = datetime.now().strftime('%Y-%m-%d')
 
@@ -90,9 +95,7 @@ def handle_api_error(error_message):
         error_log = {}
 
     if not error_logged_today:
-        # Send error email
         send_error_email(error_message)
-        # Update error log
         error_log['last_error_date'] = today_str
         with open(API_ERROR_LOG_FILE, 'w') as f:
             json.dump(error_log, f)
@@ -128,16 +131,16 @@ def parse_flight_data(html_content):
     flight_rows = soup.select('a.lms-row')
     flights = []
 
+    print(f"Parsing {len(flight_rows)} flights from the HTML content.")
+    
     for row in flight_rows:
         date_info = row.select_one('div.departy p:nth-of-type(2)').text.strip()
         destination_info = row.select_one('div.destiny p:nth-of-type(2)').text.strip()
         price_info = row.select_one('div.pricey p.current-price').text.strip()
 
-        # Extract the 'hurry' element if present
         hurry_element = row.select_one('div.hurry p')
         hurry_text = hurry_element.text.strip() if hurry_element else None
 
-        # Clean and parse the data
         price = int(price_info.split(' ')[0])
         flight = {
             'date_info': date_info,
@@ -147,6 +150,8 @@ def parse_flight_data(html_content):
             'hurry_text': hurry_text
         }
         flights.append(flight)
+    
+    print(f"Total flights parsed: {len(flights)}")
     return flights
 
 def load_previous_flights():
@@ -162,8 +167,11 @@ def save_current_flights(flights_data):
 
 def send_email(alerts):
     if not alerts:
-        return  # No alerts to send
+        print("No alerts to send.")
+        return
 
+    print(f"Preparing to send {len(alerts)} alerts via email.")
+    
     msg = MIMEMultipart()
     msg['From'] = email_sender
     msg['To'] = ', '.join(email_receivers)
@@ -204,7 +212,6 @@ def send_email(alerts):
     except Exception as e:
         print(f"Failed to send email: {e}")
 
-# Function to log flight prices into a CSV file
 def log_flight_price(flight_date, flight_time, destination, price):
     current_time = datetime.now()
     log_date = current_time.strftime("%Y-%m-%d")
@@ -214,11 +221,9 @@ def log_flight_price(flight_date, flight_time, destination, price):
         fieldnames = ['log_date', 'log_time', 'flight_date', 'flight_time', 'destination', 'price']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-        # Write the header only if the file is empty (first time logging)
         if csvfile.tell() == 0:
             writer.writeheader()
 
-        # Log the current price with a timestamp
         writer.writerow({
             'log_date': log_date,
             'log_time': log_time,
@@ -231,15 +236,15 @@ def log_flight_price(flight_date, flight_time, destination, price):
 def main():
     if env != "dev":
         time.sleep(random.uniform(123, 1231))
+        print(f"Running in {env} environment. Delayed start.")
 
-    # Check if there are any future dates to track
     if not has_future_dates():
-        print("No future dates to track. Exiting script.")
+        print("No future dates available for tracking. Exiting.")
         return
 
     html_content = fetch_flight_data()
     if html_content is None:
-        # Error handled in fetch_flight_data()
+        print("No HTML content fetched. Exiting.")
         return
 
     flights = parse_flight_data(html_content)
@@ -253,43 +258,33 @@ def main():
         flight_date, flight_time = date_info.split(' · ')
         price = flight['price']
         hurry_text = flight['hurry_text']
-        flight_key = date_info  # Use date_info as a unique key
+        flight_key = date_info  
     
         destination_info = flight['destination_info']
         log_flight_price(flight_date, flight_time, destination_info, price)
 
-        # Initialize current flight data
         current_flights[flight_key] = {
             'price': price,
             'hurry_alert_sent': False
         }
 
-        # Get previous flight data
         prev_flight_data = previous_flights.get(flight_key, {})
         prev_price = prev_flight_data.get('price')
         hurry_alert_sent = prev_flight_data.get('hurry_alert_sent', False)
 
-        # Check for 'hurry' alert
         if hurry_text and not hurry_alert_sent:
-            # Add to alerts list
             alerts.append({'type': 'hurry', 'flight': flight})
-            # Mark that we've sent a 'hurry' alert for this flight
             current_flights[flight_key]['hurry_alert_sent'] = True
         else:
             current_flights[flight_key]['hurry_alert_sent'] = hurry_alert_sent
 
-        # Check for price drop and within threshold
         if date_info in dates_to_track and price <= price_threshold:
             current_flights[flight_key]['price'] = price
 
             if prev_price is None or price < prev_price:
-                # Add to alerts list
                 alerts.append({'type': 'price_drop', 'flight': flight})
 
-    # Send email if there are any alerts
     send_email(alerts)
-
-    # Save the current flight data
     save_current_flights(current_flights)
 
 if __name__ == "__main__":
