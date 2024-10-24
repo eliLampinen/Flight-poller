@@ -1,5 +1,4 @@
 import requests
-import cloudscraper
 from bs4 import BeautifulSoup
 import smtplib
 from email.mime.text import MIMEText
@@ -69,8 +68,7 @@ def fetch_flight_data():
     print(f"Fetching flight data from URL: {url}")
     
     try:
-        scraper = cloudscraper.create_scraper()
-        response = scraper.get(url, headers=headers)
+        response = requests.get(url, headers=headers)
         if response.status_code != 200:
             print(f"Error: Failed to fetch data. Status code: {response.status_code}, Response text: {response.text}")
             handle_api_error(response.status_code)
